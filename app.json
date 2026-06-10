@@ -1,0 +1,135 @@
+{
+  "description": "LangFlow Export - Multi-Agent Research Assistant powered by IBM watsonx.ai and Granite-3.0-8B-Instruct",
+  "name": "IBM-SkillsBuild-Research-Agent",
+  "data": {
+    "nodes": [
+      {
+        "id": "chat_input_0",
+        "type": "ChatInput",
+        "data": {
+          "label": "Chat Input",
+          "node": {
+            "template": {
+              "input_value": {
+                "type": "str",
+                "value": "Enter your research topic, hypothesis, or upload a reference document metadata query."
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "watsonx_llm_0",
+        "type": "WatsonxLLM",
+        "data": {
+          "label": "IBM watsonx.ai Engine",
+          "node": {
+            "template": {
+              "model_name": {
+                "type": "str",
+                "value": "ibm/granite-3-0-8b-instruct"
+              },
+              "project_id": {
+                "type": "str",
+                "value": "YOUR_IBM_WATSONX_PROJECT_ID_PLACEHOLDER"
+              },
+              "decoding_method": {
+                "type": "str",
+                "value": "greedy"
+              },
+              "max_new_tokens": {
+                "type": "int",
+                "value": 1024
+              },
+              "temperature": {
+                "type": "float",
+                "value": 0.7
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "literature_agent_prompt_0",
+        "type": "PromptTemplate",
+        "data": {
+          "label": "Agentic ReAct Routing Prompt",
+          "node": {
+            "template": {
+              "template_text": {
+                "type": "str",
+                "value": "You are an autonomous Research Agent powered by IBM Granite. Your task is to process the following academic query: {user_query}.\n\nYou have access to the following tools:\n- Literature Search Agent (queries external scientific metadata)\n- Document Summarization Agent (processes text blocks)\n- Citation Management Agent (formats bibliography)\n\nUse a step-by-step reasoning loop (Thought -> Action -> Observation -> Thought) to systematically synthesize a response with verifiable academic citations."
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "chroma_vector_db_0",
+        "type": "ChromaDB",
+        "data": {
+          "label": "Vector Database (Knowledge Base)",
+          "node": {
+            "template": {
+              "collection_name": {
+                "type": "str",
+                "value": "academic_literature_embeddings"
+              },
+              "persist_directory": {
+                "type": "str",
+                "value": "./chroma_storage"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "chat_output_0",
+        "type": "ChatOutput",
+        "data": {
+          "label": "Chat Output",
+          "node": {
+            "template": {
+              "output_value": {
+                "type": "str",
+                "value": ""
+              }
+            }
+          }
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "chat_input_0",
+        "target": "literature_agent_prompt_0",
+        "source_output": "message",
+        "target_input": "user_query"
+      },
+      {
+        "source": "literature_agent_prompt_0",
+        "target": "watsonx_llm_0",
+        "source_output": "prompt",
+        "target_input": "prompt"
+      },
+      {
+        "source": "chroma_vector_db_0",
+        "target": "watsonx_llm_0",
+        "source_output": "retrieved_context",
+        "target_input": "context"
+      },
+      {
+        "source": "watsonx_llm_0",
+        "target": "chat_output_0",
+        "source_output": "text",
+        "target_input": "message"
+      }
+    ]
+  },
+  "metadata": {
+    "platform": "LangFlow v1.0+",
+    "target_hackathon": "AICTE-2026",
+    "track": "IBM Skills Build for University Engagements",
+    "problem_statement": "Problem Statement No.1 - Research Agent"
+  }
+}
